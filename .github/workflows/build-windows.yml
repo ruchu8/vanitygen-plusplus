@@ -1,4 +1,4 @@
-name: Build Vanitygen++ Windows
+name: Build Vanitygen++ Window2s
 on:
   push:
     branches: [ main ]
@@ -29,8 +29,8 @@ jobs:
         run: |
           export CFLAGS="-O3 -Wall -Wno-deprecated-declarations"
           export LDFLAGS="-static -static-libgcc -static-libstdc++"
-          make clean
-          make all
+          mingw32-make clean
+          mingw32-make all
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
