@@ -16,12 +16,13 @@
 # brew install check                # Only need if you want to run tests
 
 LIBS=-lpcre -lcrypto -lm -lpthread
-CFLAGS=-ggdb -O3 -Wall -Wno-deprecated
+CFLAGS?=-ggdb -O3 -Wall -Wno-deprecated
+LDFLAGS?=
 # CFLAGS=-ggdb -Wall -Wno-deprecated -fsanitize=address
 # CFLAGS=-ggdb -O3 -Wall -I /usr/local/cuda-10.2/include/
 
 OBJS=vanitygen.o oclvanitygen.o oclvanityminer.o oclengine.o keyconv.o pattern.o util.o groestl.o sha3.o ed25519.o \
-     stellar.o base32.o crc16.o bech32.o segwit_addr.o compat.o \
+     stellar.o base32.o crc16.o bech32.o segwit_addr.o compat.o winglue.o \
      ocled25519engine.o oclvanitygen_ed25519.o
 PROGS=vanitygen++ keyconv oclvanitygen++ oclvanityminer
 
@@ -37,6 +38,11 @@ ifeq ($(PLATFORM),Darwin)
 else ifeq ($(PLATFORM),NetBSD)
 	LIBS+=`pcre-config --libs`
 	CFLAGS+=`pcre-config --cflags`
+else ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)
+	# MinGW Windows 平台配置
+	OPENCL_LIBS=-lOpenCL
+	CFLAGS += -D_WIN32
+	LIBS += -lgdi32
 else
 	OPENCL_LIBS=-lOpenCL
 endif
@@ -46,14 +52,14 @@ most: vanitygen++ keyconv
 
 all: $(PROGS)
 
-vanitygen++: vanitygen.o pattern.o util.o groestl.o sha3.o ed25519.o stellar.o base32.o crc16.o simplevanitygen.o bech32.o segwit_addr.o
-	$(CC) $^ -o $@ $(CFLAGS) $(LIBS)
+vanitygen++: vanitygen.o pattern.o util.o groestl.o sha3.o ed25519.o stellar.o base32.o crc16.o simplevanitygen.o bech32.o segwit_addr.o winglue.o
+	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS) $(LIBS)
 
-oclvanitygen++: oclvanitygen.o oclengine.o pattern.o util.o groestl.o sha3.o ocled25519engine.o oclvanitygen_ed25519.o stellar.o base32.o crc16.o compat.o
-	$(CC) $^ -o $@ $(CFLAGS) $(LIBS) $(OPENCL_LIBS)
+oclvanitygen++: oclvanitygen.o oclengine.o pattern.o util.o groestl.o sha3.o ocled25519engine.o oclvanitygen_ed25519.o stellar.o base32.o crc16.o compat.o winglue.o
+	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS) $(LIBS) $(OPENCL_LIBS)
 
-oclvanityminer: oclvanityminer.o oclengine.o pattern.o util.o groestl.o sha3.o
-	$(CC) $^ -o $@ $(CFLAGS) $(LIBS) $(OPENCL_LIBS) -lcurl
+oclvanityminer: oclvanityminer.o oclengine.o pattern.o util.o groestl.o sha3.o winglue.o
+	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS) $(LIBS) $(OPENCL_LIBS) -lcurl
 
 ocled25519engine.o: ocled25519engine.c ocled25519engine.h
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -61,13 +67,13 @@ ocled25519engine.o: ocled25519engine.c ocled25519engine.h
 oclvanitygen_ed25519.o: oclvanitygen_ed25519.c ocled25519engine.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-keyconv: keyconv.o util.o groestl.o sha3.o
-	$(CC) $^ -o $@ $(CFLAGS) $(LIBS)
+keyconv: keyconv.o util.o groestl.o sha3.o winglue.o
+	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS) $(LIBS)
 
 run_tests.o: tests.h util_test.h segwit_addr_test.h pattern_test.h ton_test.h pattern.c pattern.h
 
-run_tests: run_tests.o util.o groestl.o sha3.o bech32.o segwit_addr.o crc16.o
-	$(CC) $^ -o $@ $(CFLAGS) $(LIBS) $(OPENCL_LIBS) -lcheck -lsubunit
+run_tests: run_tests.o util.o groestl.o sha3.o bech32.o segwit_addr.o crc16.o winglue.o
+	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS) $(LIBS) $(OPENCL_LIBS) -lcheck -lsubunit
 
 test: run_tests
 	./run_tests
