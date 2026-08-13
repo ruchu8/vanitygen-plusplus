@@ -1,23 +1,19 @@
 /*
- * Vanitygen, vanity bitcoin address generator
- * Copyright (C) 2011 <samr7@cs.washington.edu>
- *
- * Vanitygen is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
- *
- * Vanitygen is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Vanitygen.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-#if !defined (__VG_WINGLUE_H__)
-#define __VG_WINGLUE_H__
+Vanitygen, vanity bitcoin address generator
+Copyright (C) 2011 samr7@cs.washington.edu
+Vanitygen is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+Vanitygen is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+You should have received a copy of the GNU Affero General Public License
+along with Vanitygen. If not, see http://www.gnu.org/licenses/.
+*/
+#if !defined (VG_WINGLUE_H)
+#define VG_WINGLUE_H
 
 #include <windows.h>
 #include <tchar.h>
@@ -30,13 +26,12 @@ struct timezone;
 
 extern int gettimeofday(struct timeval *tv, struct timezone *tz);
 extern void timeradd(struct timeval *a, struct timeval *b,
-		     struct timeval *result);
+struct timeval *result);
 extern void timersub(struct timeval *a, struct timeval *b,
-		     struct timeval *result);
+struct timeval *result);
 
 extern TCHAR *optarg;
 extern int optind;
-
 extern int getopt(int argc, TCHAR *argv[], TCHAR *optstring);
 
 extern int count_processors(void);
@@ -44,12 +39,13 @@ extern int count_processors(void);
 #define PRSIZET "I"
 
 /*
- * 仅旧MinGW启用strtok_r兼容层；新版MinGW64自带strtok_r，跳过，消除重定义冲突
- */
+新版MinGW64自带strtok_r，不再定义，消除重定义编译错误
+只有旧MinGW才启用这个兼容函数
+*/
 #if defined(_WIN32) && (!defined(__MINGW64_VERSION_MAJOR) || __MINGW64_VERSION_MAJOR < 9)
 static inline char *strtok_r(char *strToken, const char *strDelimit, char **context) {
-	return strtok_s(strToken, strDelimit, context);
+    return strtok_s(strToken, strDelimit, context);
 }
 #endif
 
-#endif /* !defined (__VG_WINGLUE_H__) */
+#endif /* !defined (VG_WINGLUE_H) */
