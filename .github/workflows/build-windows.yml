@@ -1,29 +1,38 @@
-name: Build Windows Binary
+name: Build Vanitygen++ Windows
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # 支持手动点按钮触发编译
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-      # 初始化VS编译环境
-      - name: Setup MSVC
+      - name: Setup MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
-      # TODO：自动下载配置 openssl、pthreads-win32、pcre（需要补充脚本配置路径）
-      # 重点难点：自动部署依赖并修改Makefile.Win32路径
-      - name: Build
-        run: nmake /f Makefile.Win32
+      - name: Prepare dependencies
+        run: powershell -ExecutionPolicy Bypass -File .\prepare_deps.ps1
 
-      - name: Upload artifacts
+      - name: Patch Makefile.Win32 path
+        run: |
+          (Get-Content Makefile.Win32) -replace 'OPENSSL_DIR \?=.*','OPENSSL_DIR ?= $(pwd)\deps\openssl-win64' | Set-Content Makefile.Win32
+          (Get-Content Makefile.Win32) -replace 'PTHREADS_DIR \?=.*','PTHREADS_DIR ?= $(pwd)\deps\pthreads-win64' | Set-Content Makefile.Win32
+          (Get-Content Makefile.Win32) -replace 'PCRE_DIR \?=.*','PCRE_DIR ?= $(pwd)\deps\pcre-win64' | Set-Content Makefile.Win32
+
+      - name: Build all targets
+        run: nmake /f Makefile.Win32 all
+
+      - name: Upload compiled binaries
         uses: actions/upload-artifact@v4
         with:
-          name: vanitygen-windows-bin
+          name: vanitygen-win64-bin
           path: |
-            oclvanitygen++.exe
             vanitygen++.exe
+            oclvanitygen++.exe
             keyconv.exe
