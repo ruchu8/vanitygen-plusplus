@@ -18,7 +18,7 @@
 
 #if !defined (__VG_WINGLUE_H__)
 #define __VG_WINGLUE_H__
-
+#ifndef strtok_r
 #include <windows.h>
 #include <tchar.h>
 #include <time.h>
@@ -44,7 +44,7 @@ extern int count_processors(void);
 #define PRSIZET "I"
 
 static inline char *
-strtok_r(char *strToken, const char *strDelimit, char **context) {
+char *strtok_r(char *strToken, const char *strDelimit, char **context) {
 	return strtok_s(strToken, strDelimit, context);
 }
 
