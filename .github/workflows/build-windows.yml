@@ -1,0 +1,29 @@
+name: Build Windows Binary
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # 支持手动点按钮触发编译
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 初始化VS编译环境
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # TODO：自动下载配置 openssl、pthreads-win32、pcre（需要补充脚本配置路径）
+      # 重点难点：自动部署依赖并修改Makefile.Win32路径
+      - name: Build
+        run: nmake /f Makefile.Win32
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vanitygen-windows-bin
+          path: |
+            oclvanitygen++.exe
+            vanitygen++.exe
+            keyconv.exe
