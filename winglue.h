@@ -18,7 +18,7 @@
 
 #if !defined (__VG_WINGLUE_H__)
 #define __VG_WINGLUE_H__
-#ifndef strtok_r
+
 #include <windows.h>
 #include <tchar.h>
 #include <time.h>
@@ -43,9 +43,13 @@ extern int count_processors(void);
 
 #define PRSIZET "I"
 
-#if 0
+/*
+ * 仅旧MinGW启用strtok_r兼容层；新版MinGW64自带strtok_r，跳过，消除重定义冲突
+ */
+#if defined(_WIN32) && (!defined(__MINGW64_VERSION_MAJOR) || __MINGW64_VERSION_MAJOR < 9)
 static inline char *strtok_r(char *strToken, const char *strDelimit, char **context) {
 	return strtok_s(strToken, strDelimit, context);
 }
+#endif
 
 #endif /* !defined (__VG_WINGLUE_H__) */
