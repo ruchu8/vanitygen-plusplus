@@ -24,12 +24,6 @@ jobs:
             mingw-w64-x86_64-winpthreads
             mingw-w64-x86_64-opencl-headers
 
-      - name: Patch winglue.h fix strtok_r conflict
-        shell: msys2 {0}
-        run: |
-          sed -i '46i\#ifndef strtok_r' winglue.h
-          sed -i '55a\#endif' winglue.h
-
       - name: Build CPU vanitygen++ (static, exclude miner)
         shell: msys2 {0}
         run: |
