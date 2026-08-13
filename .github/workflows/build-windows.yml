@@ -1,38 +1,50 @@
-name: Build Vanitygen++ Windows
+name: Build Vanitygen++ Static Windows
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build:
+  build-windows-static:
     runs-on: windows-latest
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup MSVC environment
-        uses: ilammy/msvc-dev-cmd@v1
+      # 安装 MinGW-w64 + 预编译静态库 OpenSSL3 + PCRE + pthread
+      - name: Setup MinGW-w64
+        uses: msys2/setup-msys2@v2
         with:
-          arch: x64
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-openssl
+            mingw-w64-x86_64-pcre
+            mingw-w64-x86_64-winpthreads
 
-      - name: Prepare dependencies
-        run: powershell -ExecutionPolicy Bypass -File .\prepare_deps.ps1
-
-      - name: Patch Makefile.Win32 path
+      - name: Build static linked binaries
+        shell: msys2 {0}
         run: |
-          (Get-Content Makefile.Win32) -replace 'OPENSSL_DIR \?=.*','OPENSSL_DIR ?= $(pwd)\deps\openssl-win64' | Set-Content Makefile.Win32
-          (Get-Content Makefile.Win32) -replace 'PTHREADS_DIR \?=.*','PTHREADS_DIR ?= $(pwd)\deps\pthreads-win64' | Set-Content Makefile.Win32
-          (Get-Content Makefile.Win32) -replace 'PCRE_DIR \?=.*','PCRE_DIR ?= $(pwd)\deps\pcre-win64' | Set-Content Makefile.Win32
+          # 编译 CPU 版本 vanitygen++ (静态链接)
+          gcc -O3 -Wall -static -static-libgcc -static-libstdc++ \
+            vanitygen.c oclvanitygen.c oclvanityminer.c \
+            -o vanitygen++.exe \
+            -lpcre -lcrypto -lpthread
 
-      - name: Build all targets
-        run: nmake /f Makefile.Win32 all
+          # 编译 OpenCL GPU 版本 oclvanitygen++
+          gcc -O3 -Wall -static -static-libgcc -static-libstdc++ \
+            oclvanitygen.c vanitygen.c oclvanityminer.c \
+            -o oclvanitygen++.exe \
+            -lpcre -lcrypto -lpthread -lOpenCL
 
-      - name: Upload compiled binaries
+          ls -la *.exe
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: vanitygen-win64-bin
+          name: vanitygen-win64-static
           path: |
             vanitygen++.exe
             oclvanitygen++.exe
-            keyconv.exe
