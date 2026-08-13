@@ -1,17 +1,17 @@
-name: Build Vanitygen++ Static Windows
+name: Build Vanitygen++ Windows
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build-windows-static:
+  build-windows:
     runs-on: windows-latest
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup MinGW-w64
+      - name: Setup MSYS2 MinGW64
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -24,25 +24,19 @@ jobs:
             mingw-w64-x86_64-winpthreads
             mingw-w64-x86_64-opencl-headers
 
-      - name: Build CPU vanitygen++ (static, exclude miner)
+      - name: Compile with Makefile (Static build)
         shell: msys2 {0}
         run: |
-          gcc -O3 -Wall -static -static-libgcc -static-libstdc++ \
-            vanitygen.c oclvanitygen.c \
-            -o vanitygen++.exe \
-            -lpcre -lcrypto -lpthread
+          export CFLAGS="-O3 -Wall -Wno-deprecated-declarations"
+          export LDFLAGS="-static -static-libgcc -static-libstdc++"
+          make clean
+          make all
 
-          gcc -O3 -Wall -static -static-libgcc -static-libstdc++ \
-            oclvanitygen.c vanitygen.c \
-            -o oclvanitygen++.exe \
-            -lpcre -lcrypto -lpthread -lOpenCL
-
-          ls -la *.exe
-
-      - name: Upload artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: vanitygen-win64-static
           path: |
             vanitygen++.exe
             oclvanitygen++.exe
+            keyconv.exe
