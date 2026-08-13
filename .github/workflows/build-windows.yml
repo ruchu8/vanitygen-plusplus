@@ -1,4 +1,4 @@
-name: Build Vanitygen++ Window2s
+name: Build Vanitygen++ Windows
 on:
   push:
     branches: [ main ]
@@ -24,7 +24,7 @@ jobs:
             mingw-w64-x86_64-winpthreads
             mingw-w64-x86_64-opencl-headers
 
-      - name: Compile with Makefile (Static build)
+      - name: Compile
         shell: msys2 {0}
         run: |
           export CFLAGS="-O3 -Wall -Wno-deprecated-declarations"
@@ -32,7 +32,7 @@ jobs:
           mingw32-make clean
           mingw32-make all
 
-      - name: Upload build artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: vanitygen-win64-static
