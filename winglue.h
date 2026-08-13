@@ -43,8 +43,8 @@ extern int count_processors(void);
 
 #define PRSIZET "I"
 
-static inline char *
-char *strtok_r(char *strToken, const char *strDelimit, char **context) {
+#if 0
+static inline char *strtok_r(char *strToken, const char *strDelimit, char **context) {
 	return strtok_s(strToken, strDelimit, context);
 }
 
