@@ -38,10 +38,6 @@ extern int count_processors(void);
 
 #define PRSIZET "I"
 
-/*
-新版MinGW64自带strtok_r，不再定义，消除重定义编译错误
-只有旧MinGW才启用这个兼容函数
-*/
 #if defined(_WIN32) && (!defined(__MINGW64_VERSION_MAJOR) || __MINGW64_VERSION_MAJOR < 9)
 static inline char *strtok_r(char *strToken, const char *strDelimit, char **context) {
     return strtok_s(strToken, strDelimit, context);
