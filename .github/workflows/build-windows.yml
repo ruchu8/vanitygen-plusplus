@@ -1,42 +1,26 @@
-name: Build Vanitygen++ Windows
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup MSYS2 MinGW64
+      - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
           update: true
+          # 安装编译全部依赖，重点 mingw-w64-x86_64-pcre
           install: >-
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-make
             mingw-w64-x86_64-openssl
             mingw-w64-x86_64-pcre
-            mingw-w64-x86_64-winpthreads
-            mingw-w64-x86_64-opencl-headers
+            mingw-w64-x86_64-pthreads
+            mingw-w64-x86_64-gdi
+            mingw-w64-x86_64-winsock
 
-      - name: Compile
+      - name: Build inside MSYS2 MINGW64
         shell: msys2 {0}
         run: |
-          export CFLAGS="-O3 -Wall -Wno-deprecated-declarations"
-          export LDFLAGS="-static -static-libgcc -static-libstdc++"
           mingw32-make clean
-          mingw32-make all
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: vanitygen-win64-static
-          path: |
-            vanitygen++.exe
-            oclvanitygen++.exe
-            keyconv.exe
+          mingw32-make
