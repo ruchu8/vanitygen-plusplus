@@ -11,7 +11,6 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # 安装 MinGW-w64 + 预编译静态库 OpenSSL3 + PCRE + pthread
       - name: Setup MinGW-w64
         uses: msys2/setup-msys2@v2
         with:
@@ -23,19 +22,24 @@ jobs:
             mingw-w64-x86_64-openssl
             mingw-w64-x86_64-pcre
             mingw-w64-x86_64-winpthreads
+            mingw-w64-x86_64-opencl-headers
 
-      - name: Build static linked binaries
+      - name: Patch winglue.h fix strtok_r conflict
         shell: msys2 {0}
         run: |
-          # 编译 CPU 版本 vanitygen++ (静态链接)
+          sed -i '46i\#ifndef strtok_r' winglue.h
+          sed -i '55a\#endif' winglue.h
+
+      - name: Build CPU vanitygen++ (static, exclude miner)
+        shell: msys2 {0}
+        run: |
           gcc -O3 -Wall -static -static-libgcc -static-libstdc++ \
-            vanitygen.c oclvanitygen.c oclvanityminer.c \
+            vanitygen.c oclvanitygen.c \
             -o vanitygen++.exe \
             -lpcre -lcrypto -lpthread
 
-          # 编译 OpenCL GPU 版本 oclvanitygen++
           gcc -O3 -Wall -static -static-libgcc -static-libstdc++ \
-            oclvanitygen.c vanitygen.c oclvanityminer.c \
+            oclvanitygen.c vanitygen.c \
             -o oclvanitygen++.exe \
             -lpcre -lcrypto -lpthread -lOpenCL
 
